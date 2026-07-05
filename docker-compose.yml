@@ -1,0 +1,30 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: inventory-pro-backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-8001}:${BACKEND_PORT:-8001}"
+    environment:
+      PORT: ${BACKEND_PORT:-8001}
+      APP_ENV: ${APP_ENV:-production}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      ENABLE_DOCS: ${ENABLE_DOCS:-true}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,os; urllib.request.urlopen(f'http://localhost:{os.environ[\"PORT\"]}/')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8001}
+    container_name: inventory-pro-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    depends_on:
+      - backend
